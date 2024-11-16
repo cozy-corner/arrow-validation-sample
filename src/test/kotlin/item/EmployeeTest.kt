@@ -18,8 +18,8 @@ class EmployeeTest {
                 phone = "123-4567-8901",
             )
         Employee.create(re).fold(
-            { fail("Validation failed: $it") },
-            { employee ->
+            ifLeft = { fail("Validation failed: $it") },
+            ifRight = { employee ->
                 assertEquals(1, employee.employeeID.value)
                 assertEquals("John Doe", employee.name.value)
                 assertEquals("IT", employee.department.value)
@@ -39,7 +39,7 @@ class EmployeeTest {
                 phone = "",
             )
         Employee.create(re).fold(
-            {
+            ifLeft = {
                 assertEquals(
                     it,
                     nonEmptyListOf(
@@ -53,7 +53,7 @@ class EmployeeTest {
                     ),
                 )
             },
-            { _ -> fail("Validation should fail") },
+            ifRight = { _ -> fail("Validation should fail") },
         )
     }
 }
