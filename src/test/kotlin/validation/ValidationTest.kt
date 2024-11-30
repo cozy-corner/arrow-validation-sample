@@ -1,11 +1,14 @@
 package validation
 
+import EmployeeValidationError
 import arrow.core.Either
 import arrow.core.nonEmptyListOf
 import item.RawEmployee
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import validate
+import validateAndAccumulate
+import kotlin.math.E
 import kotlin.test.Test
 import kotlin.test.fail
 
@@ -18,7 +21,7 @@ class ValidationTest {
             RawEmployee("2", "Jane Smith", "Marketing", "jane.smith@example.com", "234-5678-9012")
         )
 
-        val result = validate(rawEmployees)
+        val result = validateAndAccumulate(rawEmployees)
 
         assertTrue(result is Either.Right && result.value.size == 2)
     }
@@ -27,7 +30,7 @@ class ValidationTest {
     fun `should return empty list`() {
         val rawEmployees = emptyList<RawEmployee>()
 
-        val result = validate(rawEmployees)
+        val result = validateAndAccumulate(rawEmployees)
 
         assertTrue(result is Either.Right && result.value.isEmpty())
     }
@@ -40,14 +43,22 @@ class ValidationTest {
             RawEmployee("", "", "", "", "")
         )
 
-        val result = validate(rawEmployees)
+        val result = validateAndAccumulate(rawEmployees)
 
         result.fold(
             ifLeft = { errors ->
                 assertEquals(
                     nonEmptyListOf(
                         EmployeeValidationError.InvalidEmail,
-//                        EmployeeValidationError.InvalidPhone, FIXME
+                        EmployeeValidationError.InvalidPhone,
+                        EmployeeValidationError.EmployeeIdMustBeNumber,
+                        EmployeeValidationError.EmptyEmployeeID,
+                        EmployeeValidationError.EmptyName,
+                        EmployeeValidationError.EmptyDepartment,
+                        EmployeeValidationError.EmptyEmail,
+                        EmployeeValidationError.InvalidEmail,
+                        EmployeeValidationError.EmptyPhone,
+                        EmployeeValidationError.InvalidPhone
                     ),
                     errors,
                 )
