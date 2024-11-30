@@ -1,28 +1,25 @@
 import arrow.core.Either
 import arrow.core.NonEmptyList
 import arrow.core.raise.either
-import arrow.core.raise.ensure
-import arrow.core.raise.zipOrAccumulate
+import arrow.core.toNonEmptyListOrNull
 import item.RawEmployee
-
 
 // this is not accumulative
 fun validate(res: List<RawEmployee>): Either<NonEmptyList<EmployeeValidationError>, List<Employee>> =
     res.map { Employee.create(it) }.let { it -> either { it.bindAll() } }
 
-fun validateAndAccumulate(res: List<RawEmployee>): Either<NonEmptyList<EmployeeValidationError>, List<Employee>>  {
+fun validateAndAccumulate(res: List<RawEmployee>): Either<NonEmptyList<EmployeeValidationError>, List<Employee>> {
     val (errors, employees) = res.map { Employee.create(it) }.partitionEither()
-
-    return if (errors.isNotEmpty()) {
-        // TODO fromListUnsafe is deprecated
-        Either.Left(NonEmptyList.fromListUnsafe(errors.flatten()))
+    val nelErrors = errors.flatten().toNonEmptyListOrNull()
+    return if (nelErrors != null) {
+        Either.Left(nelErrors)
     } else {
         Either.Right(employees)
     }
 }
 
 // this is honest code
-//fun <A, B> List<Either<A, B>>.partitionEither(): Pair<List<A>, List<B>> {
+// fun <A, B> List<Either<A, B>>.partitionEither(): Pair<List<A>, List<B>> {
 //    val lefts = mutableListOf<A>()
 //    val rights = mutableListOf<B>()
 //    for (either in this) {
@@ -32,8 +29,9 @@ fun validateAndAccumulate(res: List<RawEmployee>): Either<NonEmptyList<EmployeeV
 //        }
 //    }
 //    return lefts to rights
-//}
+// }
 
+// TODO return Pair<NonEmptyList<A>, List<B>>
 fun <A, B> List<Either<A, B>>.partitionEither(): Pair<List<A>, List<B>> =
     this.fold(initial = emptyList<A>() to emptyList<B>()) { (lefts, rights), either ->
         when (either) {
